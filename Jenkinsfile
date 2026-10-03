@@ -1,27 +1,39 @@
+@Library('mySharedLib') _
+
 pipeline {
     agent any
+    
     tools {
-        maven 'maven399'
+        maven 'Maven-3.9.9' 
     }
 
     stages {
-
-        stage('Compile') {
+        stage('Checkout Source') {
             steps {
-                sh 'mvn compile'
+                gitCheckout()
             }
         }
-
-        stage('Test') {
+        
+        stage('Execute Maven Build via Shared Library') {
             steps {
-                sh 'mvn test'
+                mavenBuild()
             }
         }
-
-        stage('Build') {
-            steps {
-                sh 'mvn package'
+    }
+    
+    post {
+        success {
+            // Wrapped in script block and passing the required message string
+            script {
+                emailNotification.successEmail()
+            }
+        }
+        failure {
+            // Wrapped in script block and passing the required message string
+            script {
+                emailNotification.failureEmail()
             }
         }
     }
 }
+

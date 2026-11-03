@@ -61,7 +61,7 @@ pipeline
 		{
 			steps
 			{
-				sh 'docker run -d --name addressbook:$BUILD_NUMBER -P adityapmodi/addressbook:$BUILD_NUMBER'
+				sh 'docker run -d --name addressbook-$BUILD_NUMBER -P adityapmodi/addressbook:$BUILD_NUMBER'
 			}
 		}   
 	}

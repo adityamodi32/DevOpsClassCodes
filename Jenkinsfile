@@ -1,40 +1,70 @@
-@Library('mySharedLib') _
+pipeline
+{
+	agent any
+	stages
+	{
+		stage('Checkout')
+		{
+			steps
+			{
+				git 'https://github.com/adityamodi32/DevOpsClassCodes.git'
+			}
+		}
+		
+		stage('Compile')
+		{
+			steps
+			{
+				sh 'mvn compile'
+			}
+		}
 
-pipeline {
-    agent any
-    
-    tools {
-        maven 'Maven-3.9.9' 
-    }
+		stage('Test')
+		{
+			steps
+			{
+				sh 'mvn test'
+			}
+		}
 
-    stages {
-        stage('Checkout Source') {
-            steps {
-                gitCheckout()
-            }
-        }
-        
-        stage('Execute Maven Build via Shared Library') {
-            steps {
-                mavenBuild()
-            }
-        }
-    }
-    
-    post {
-        success {
-            // Wrapped in script block and passing the required message string
-            script {
-                emailNotification.successEmail()
-            }
-        }
-        failure {
-            // Wrapped in script block and passing the required message string
-            script {
-                emailNotification.failureEmail()
-            }
-        }
-    }
+		stage('Build')
+		{
+			steps
+			{
+				sh 'mvn package'
+			}
+		}
+		
+		stage('Build Docker Image')
+		{
+			steps
+			{
+	
+			    sh 'cp target/addressbook.war .'
+				sh 'docker build -t adityapmodi/addressbook:$BUILD_NUMBER .'
+				
+			}
+		}
+
+		stage('Push Docker Image')
+		{ 
+			steps
+			{   
+			    withDockerRegistry([ credentialsId: "dockerhub_creds", url: "" ])
+			    {
+			       sh 'docker push adityapmodi/addressbook:$BUILD_NUMBER'
+			    }
+			}
+		}
+
+		stage('Deploy as container')
+		{
+			steps
+			{
+				sh 'docker run -d --name addressbook:$BUILD_NUMBER -P adityapmodi/addressbook:$BUILD_NUMBER'
+			}
+		}   
+	}
+		
 }
 
-// Live Webhook Verification Run - Build #2
